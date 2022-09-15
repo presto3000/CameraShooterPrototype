@@ -7,8 +7,11 @@
 #include "CameraShooter/MainPlayerController.h"
 #include "CameraShooter/PlayerCharacter.h"
 #include "Components/BoxComponent.h"
+#include "Components/CombatComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Weapons/Weapon.h"
 
 ABulletProjectile::ABulletProjectile()
 {
@@ -65,22 +68,7 @@ void ABulletProjectile::BeginPlay()
 	{
 		ProjectileMovementComponent->OnProjectileBounce.AddDynamic(this, &ABulletProjectile::OnBounce);
 	}
-	//FPredictProjectilePathParams PathParams;
-	//PathParams.bTraceWithChannel = true; // tracing with a particle trace channel
-	//PathParams.bTraceWithCollision = true;
-	//PathParams.DrawDebugTime = 5.f;
-	//PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
-	//PathParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
-	//PathParams.MaxSimTime = 4.f;
-	//PathParams.ProjectileRadius = 5.f;
-	//PathParams.SimFrequency = 30.f;
-	//PathParams.StartLocation = GetActorLocation();
-	//PathParams.TraceChannel = ECollisionChannel::ECC_Visibility;
-	//PathParams.ActorsToIgnore.Add(this);
-//
-	//UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 }
-
 
 void ABulletProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
@@ -97,7 +85,6 @@ void ABulletProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 				Destroy();
 			}
 		}
-		
 	}
 }
 
@@ -125,20 +112,57 @@ void ABulletProjectile::DestroyTimerFinished()
 
 void ABulletProjectile::OnBounce(const FHitResult& ImpactResult, const FVector& ImpactVelocity)
 {
-	//FPredictProjectilePathParams PathParams2;
-	//PathParams2.StartLocation = ImpactResult.Location;
-	//PathParams2.bTraceWithChannel = true; // tracing with a particle trace channel
-	//PathParams2.bTraceWithCollision = true;
-	//PathParams2.DrawDebugTime = 8.f;
-	//PathParams2.DrawDebugType = EDrawDebugTrace::ForDuration;
-	//PathParams2.LaunchVelocity = GetActorForwardVector() * ImpactVelocity;
-	//PathParams2.MaxSimTime = 4.f;
-	//PathParams2.ProjectileRadius = 7.f;
-	//PathParams2.SimFrequency = 30.f;
-	//PathParams2.TraceChannel = ECollisionChannel::ECC_Visibility;
-	//PathParams2.ActorsToIgnore.Add(this);
-//
-	//FPredictProjectilePathResult PathResult2;
-//
-	//UGameplayStatics::PredictProjectilePath(this, PathParams2, PathResult2);
+	if (bDoOnce)
+	{
+		const APlayerCharacter* OwnerCharacter = Cast<APlayerCharacter> (UGameplayStatics::GetPlayerPawn(this, 0));
+		if (OwnerCharacter)
+		{
+			AMainPlayerController* OwnerController = Cast<AMainPlayerController>(OwnerCharacter->Controller);
+			if (OwnerController)
+			{
+				if (OwnerController->bIsShowingTrajectory)
+				{
+					FPredictProjectilePathParams PathParams2;
+					PathParams2.StartLocation = ImpactResult.Location;
+					PathParams2.bTraceWithChannel = true; // tracing with a particle trace channel
+					PathParams2.bTraceWithCollision = true;
+	
+					FVector ReflectionVector = UKismetMathLibrary::GetReflectionVector(
+					UKismetMathLibrary::GetDirectionUnitVector(ImpactResult.TraceStart, ImpactResult.TraceEnd), ImpactResult.Normal);
+		
+					PathParams2.LaunchVelocity = ReflectionVector * InitialSpeed / 2.f;
+		
+					PathParams2.MaxSimTime = 7.f;
+					PathParams2.ProjectileRadius = 5.f;
+					PathParams2.SimFrequency = 30.f;
+					PathParams2.TraceChannel = ECollisionChannel::ECC_Visibility;
+					PathParams2.ActorsToIgnore.Add(this);
+		
+					FPredictProjectilePathResult PathResult2;
+		
+					UGameplayStatics::PredictProjectilePath(this, PathParams2, PathResult2);
+					
+					if (OwnerCharacter->CombatComponent == nullptr || OwnerCharacter->CombatComponent->EquippedWeapon == nullptr) return;
+					
+					UWorld* World = GetWorld();
+					if (World == nullptr) return;
+					
+					if(IsValid(OwnerCharacter->CombatComponent->EquippedWeapon->PathProjectileClass))
+					{
+						for (auto PathPoint2 : PathResult2.PathData)
+						{
+							AActor* TrajectoryActor2 = World->SpawnActor<AActor>(OwnerCharacter->CombatComponent->EquippedWeapon->PathProjectileClass,
+								PathPoint2.Location, ReflectionVector.Rotation());
+							if(TrajectoryActor2)
+							{
+								OwnerCharacter->CombatComponent->EquippedWeapon->TrajectoryActorArray2.Add(TrajectoryActor2);
+							}
+						}
+					}
+					bDoOnce = false;
+				}
+			}
+		}
+	}
+
 }

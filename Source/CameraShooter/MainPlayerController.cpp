@@ -7,6 +7,7 @@
 #include "Components/CombatComponent.h"
 #include "UI/MyHUD.h"
 #include "UI/OverviewPlayerWidget.h"
+#include "Weapons/Weapon.h"
 
 
 void AMainPlayerController::SetupInputComponent()
@@ -103,15 +104,22 @@ void AMainPlayerController::OnZoomOutCameraPressed()
 
 void AMainPlayerController::OnShowProjectileTracjectoryPressed()
 {
-	if (CameraType == ECameraType::FirstPerson)
+	if (CameraType == ECameraType::ThirdPerson)
 	{
-		// TODO:: Show Projectile Path
+		if (PlayerCharacter == nullptr || PlayerCharacter->CombatComponent == nullptr || PlayerCharacter->CombatComponent->EquippedWeapon == nullptr) return;
+		bIsShowingTrajectory = true;
+		PlayerCharacter->CombatComponent->EquippedWeapon->ShowProjectileTrajectory(PlayerCharacter->CombatComponent->HitTarget);
 	}
 }
 
 void AMainPlayerController::OnShowProjectileTracjectoryReleased()
 {
-	// TODO:: Hide Projectile Path
+	if (CameraType == ECameraType::ThirdPerson)
+	{
+		if (PlayerCharacter == nullptr || PlayerCharacter->CombatComponent == nullptr || PlayerCharacter->CombatComponent->EquippedWeapon == nullptr) return;
+		bIsShowingTrajectory = false;
+		PlayerCharacter->CombatComponent->EquippedWeapon->HideProjectileTrajectory();
+	}
 }
 
 void AMainPlayerController::SetHUDScore(int32 ScoreValue)

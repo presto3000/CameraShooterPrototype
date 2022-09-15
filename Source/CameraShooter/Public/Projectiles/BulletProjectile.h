@@ -31,15 +31,13 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit);
-
-	FPredictProjectilePathResult PathResult;
 	
 	void StartDestroyTimer();
 	void DestroyTimerFinished();
 	
 	UFUNCTION()
 	void OnBounce(const FHitResult& ImpactResult, const FVector& ImpactVelocity);
-
+	
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles;
 	
@@ -57,8 +55,8 @@ public:
 	virtual void Destroyed() override;
 	
 	UPROPERTY(EditAnywhere)
-	float InitialSpeed = 3000;
-
+	float InitialSpeed = 5000;
+	bool bDoOnce = false;
 private:
 	FTimerHandle DestroyTimer;
 	UPROPERTY(EditAnywhere)

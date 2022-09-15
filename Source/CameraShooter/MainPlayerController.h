@@ -53,4 +53,6 @@ public:
 	
 	UPROPERTY()
 	AMyHUD* PlayerHUD;
+
+	bool bIsShowingTrajectory = false;
 };

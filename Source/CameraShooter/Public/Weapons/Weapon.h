@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Projectiles/BulletProjectile.h"
 #include "Weapon.generated.h"
 
 class AMainPlayerController;
@@ -20,7 +21,33 @@ public:
 	AMainPlayerController* PC;
 	
 	void Fire(const FVector& HitTarget);
+	virtual void Tick(float DeltaSeconds) override;
+	/************************************************
+				 BulletTrajectory
+	*************************************************/
+
+	void ShowProjectileTrajectory(const FVector& HitTarget);
+	void HideProjectileTrajectory();
+
+	// Same as BulletProjectile
+	float BulletInitialSpeed = 5000.f;
+	bool bShowPath = false; 
 	
+	UPROPERTY()
+	ABulletProjectile* SpawnedProjectile = nullptr;
+	// MuzzleFlashSocket
+	FTransform SocketTransform;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ABulletProjectile> FakeProjectileClass;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> PathProjectileClass;
+
+	FPredictProjectilePathResult PathResult;
+	UPROPERTY()
+	TArray<AActor*> TrajectoryActorArray;
+	UPROPERTY()
+	TArray<AActor*> TrajectoryActorArray2;
 	/************************************************
     				 Crosshair
     *************************************************/
@@ -41,7 +68,7 @@ private:
 	USkeletalMeshComponent* WeaponMesh;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ABulletProjectile> ProjectileClass;
-	
+
 // Getters:
 public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh; }
