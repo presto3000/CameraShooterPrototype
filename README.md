@@ -1,7 +1,7 @@
 # Camera ShooterPrototype  
 
 Unreal Engine 4.27 ShooterPrototype project.  
-
+~950MB
 BaseClasses made in Cpp. Additional functionality and effects in BP.  
 
 Features:  
